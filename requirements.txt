@@ -1,0 +1,6 @@
+Flask
+docxtpl
+pdfkit
+num2words
+docx2pdf
+pytz

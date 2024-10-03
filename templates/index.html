@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generar PDF</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .form-label {
+            font-weight: bold;
+        }
+        .btn-custom {
+            margin-top: 20px;
+        }
+        table input {
+            width: 100%;
+        }
+        #conceptosTable th, #conceptosTable td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-5">
+        <h2 class="text-center">Generar PDF</h2>
+        <form id="formularioPDF" action="/generate-docx" method="POST" class="needs-validation" novalidate>
+
+            <!-- Campo de tipo fecha con valor predeterminado -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="fecha" class="form-label">Fecha</label>
+                    <input type="date" name="fecha" id="fecha" class="form-control" required>
+                    <div class="invalid-feedback">Por favor seleccione la fecha.</div>
+                </div>
+            </div>
+
+            <!-- Otros campos del formulario -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="contribuyente" class="form-label">Contribuyente</label>
+                    <input type="text" name="contribuyente" class="form-control" required>
+                    <div class="invalid-feedback">Por favor ingrese el nombre del contribuyente.</div>
+                </div>
+                <div class="col-md-6">
+                    <label for="calle" class="form-label">Calle</label>
+                    <input type="text" name="calle" class="form-control" required>
+                    <div class="invalid-feedback">Por favor ingrese la calle.</div>
+                </div>
+            </div>
+
+            <!-- Campos de dirección -->
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="codigoPostal" class="form-label">Código Postal</label>
+                    <input type="text" id="codigoPostal" name="codigoPostal" class="form-control" oninput="autocompletarDireccion()" required>
+                    <div class="invalid-feedback">Por favor ingrese el código postal.</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="colonia" class="form-label">Colonia</label>
+                    <input type="text" id="colonia" name="colonia" class="form-control" required>
+                    <div class="invalid-feedback">Por favor ingrese la colonia.</div>
+                </div>
+                <div class="col-md-4">
+                    <label for="municipio" class="form-label">Municipio</label>
+                    <input type="text" id="municipio" name="municipio" class="form-control" value="VILLA DE POZOS, SAN LUIS POTOSÍ" required readonly>
+                    <div class="invalid-feedback">Por favor ingrese el municipio.</div>
+                </div>
+            </div>
+
+            <!-- Otros campos del formulario -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="dependencia" class="form-label">Dependencia</label>
+                    <input type="text" name="dependencia" class="form-control" required>
+                    <div class="invalid-feedback">Por favor ingrese la dependencia.</div>
+                </div>
+            </div>
+
+            <h3>Conceptos</h3>
+            <table id="conceptosTable" class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Concepto</th>
+                        <th>Valor</th>
+                        <th>Cantidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" name="concepto[]" class="form-control" required></td>
+                        <td><input type="number" step="0.01" name="valor[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
+                        <td><input type="number" name="cantidad[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
+                        <td><input type="number" step="0.01" name="total[]" class="form-control" readonly></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="button" class="btn btn-primary btn-sm" onclick="agregarFila()">Agregar Concepto</button>
+            <button type="button" class="btn btn-danger btn-sm" onclick="eliminarFila()">Eliminar Concepto</button>
+
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <label for="totalGlobal" class="form-label">Total Global</label>
+                    <input type="text" id="totalGlobal" name="totalGlobal" class="form-control" readonly>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <label for="observaciones" class="form-label">Observaciones</label>
+                    <textarea name="observaciones" class="form-control"></textarea>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6">
+                    <label for="elaborado_por" class="form-label">Elaborado por</label>
+                    <input type="text" name="elaborado_por" class="form-control" required>
+                    <div class="invalid-feedback">Por favor ingrese quién elabora el documento.</div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-custom" id="submitBtn" disabled>Generar PDF</button>
+        </form>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Función para obtener la fecha actual en formato YYYY-MM-DD
+        function obtenerFechaActual() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        // Establecer la fecha actual al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('fecha').value = obtenerFechaActual();
+        });
+
+        // Validación de Bootstrap
+        (function () {
+            'use strict';
+            const forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+
+        // Función para habilitar el botón solo si el formulario es válido
+        document.getElementById('formularioPDF').addEventListener('input', function() {
+            const form = this;
+            const submitBtn = document.getElementById('submitBtn');
+            if (form.checkValidity()) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        });
+
+        // Función para autocompletar los campos de colonia y manejar municipio
+        function autocompletarDireccion() {
+            const cp = document.getElementById('codigoPostal').value;
+            if (cp) {
+                fetch(`/get_cp_data?cp=${cp}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.colonia) {
+                        document.getElementById('colonia').value = data.colonia;
+                    } else {
+                        document.getElementById('colonia').value = '';
+                    }
+                    // Mantener el municipio con el valor predeterminado
+                    document.getElementById('municipio').value = "VILLA DE POZOS, SAN LUIS POTOSÍ";
+                })
+                .catch(error => {
+                    console.error('Error al obtener los datos del CP:', error);
+                    document.getElementById('colonia').value = '';
+                    document.getElementById('municipio').value = "VILLA DE POZOS, SAN LUIS POTOSÍ";
+                });
+            } else {
+                document.getElementById('colonia').value = '';
+                document.getElementById('municipio').value = "VILLA DE POZOS, SAN LUIS POTOSÍ";
+            }
+        }
+
+        // Función para agregar una nueva fila de concepto
+        function agregarFila() {
+            const table = document.getElementById("conceptosTable").getElementsByTagName("tbody")[0];
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td><input type="text" name="concepto[]" class="form-control" required></td>
+                <td><input type="number" step="0.01" name="valor[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
+                <td><input type="number" name="cantidad[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
+                <td><input type="number" step="0.01" name="total[]" class="form-control" readonly></td>
+            `;
+        }
+
+        // Función para eliminar la última fila de concepto
+        function eliminarFila() {
+            const table = document.getElementById("conceptosTable").getElementsByTagName("tbody")[0];
+            if (table.rows.length > 1) {
+                table.deleteRow(-1);
+            }
+            calcularTotalGlobal();  // Recalcular el total global después de eliminar una fila
+        }
+
+        // Función para calcular el total de una fila (valor * cantidad)
+        function calcularTotalFila(element) {
+            const row = element.closest('tr');
+            const valor = parseFloat(row.querySelector('input[name="valor[]"]').value) || 0;
+            const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
+            const totalField = row.querySelector('input[name="total[]"]');
+            const total = valor * cantidad;
+            totalField.value = total.toFixed(2);  // Mostrar total calculado en la fila
+            calcularTotalGlobal();  // Recalcular el total global
+        }
+
+        // Función para calcular el total global basado en los totales de las filas
+        function calcularTotalGlobal() {
+            const totalFields = document.querySelectorAll('input[name="total[]"]');
+            let totalGlobal = 0;
+            totalFields.forEach(field => {
+                totalGlobal += parseFloat(field.value) || 0;
+            });
+            document.getElementById('totalGlobal').value = totalGlobal.toFixed(2);  // Actualizar el campo total global
+        }
+
+        // Función para abrir la vista de impresión después de generar el PDF
+        document.getElementById('formularioPDF').addEventListener('submit', function(event) {
+            event.preventDefault();  // Prevenir el envío del formulario normal
+            const formData = new FormData(this);
+
+            fetch('/generate-docx', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al generar el PDF');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const printWindow = window.open(url, '_blank');
+                if (printWindow) {
+                    printWindow.onload = function() {
+                        printWindow.focus();  // Añadir focus para que la ventana emergente funcione correctamente en algunos navegadores
+                        printWindow.print();  // Abrir automáticamente la vista de impresión
+                    };
+                } else {
+                    alert('Por favor permite las ventanas emergentes para imprimir el PDF.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Hubo un error al generar el PDF.');
+            });
+        });
+    </script>
+
+</body>
+</html>

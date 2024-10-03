@@ -1,0 +1,11 @@
+
+services:
+  python-flask-app:
+    build: .
+    ports:
+      - "5000:5000"  # Exponemos el puerto 5000 para que la app sea accesible en localhost
+    volumes:
+      - .:/app  # Montamos el directorio actual dentro del contenedor para ver los cambios en tiempo real
+    environment:
+      FLASK_ENV: development  # Configura Flask para modo desarrollo
+    command: python app.py  # Comando para iniciar la aplicación
