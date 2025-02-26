@@ -1,3 +1,4 @@
+version: '3.8'
 
 services:
   python-flask-app:
@@ -6,6 +7,23 @@ services:
       - "5000:5000"  # Exponemos el puerto 5000 para que la app sea accesible en localhost
     volumes:
       - .:/app  # Montamos el directorio actual dentro del contenedor para ver los cambios en tiempo real
+    env_file:
+      - .env  # Añadimos esta línea para cargar las variables de entorno desde .env
+    depends_on:
+      - db  # Asegura que PostgreSQL se inicie antes que la app
+    command: ["./wait-for-it.sh", "db:5432", "--", "python", "app.py"]  # Comando para iniciar la aplicación
+    
+  db:
+    image: postgres:15
+    restart: always
     environment:
-      FLASK_ENV: development  # Configura Flask para modo desarrollo
-    command: python app.py  # Comando para iniciar la aplicación
+      POSTGRES_USER: usuario
+      POSTGRES_PASSWORD: contraseña
+      POSTGRES_DB: recibos_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Volumen para persistencia de datos
+
+volumes:
+  postgres_data:

@@ -92,7 +92,7 @@
                     <tr>
                         <td><input type="text" name="concepto[]" class="form-control" required></td>
                         <td><input type="number" step="0.01" name="valor[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
-                        <td><input type="number" name="cantidad[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
+                        <td><input type="number" step="0.0001" name="cantidad[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
                         <td><input type="number" step="0.01" name="total[]" class="form-control" readonly></td>
                     </tr>
                 </tbody>
@@ -203,7 +203,7 @@
             newRow.innerHTML = `
                 <td><input type="text" name="concepto[]" class="form-control" required></td>
                 <td><input type="number" step="0.01" name="valor[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
-                <td><input type="number" name="cantidad[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
+                <td><input type="number" step="0.0001" name="cantidad[]" class="form-control" required oninput="calcularTotalFila(this)"></td>
                 <td><input type="number" step="0.01" name="total[]" class="form-control" readonly></td>
             `;
         }

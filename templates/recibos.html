@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Recibos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        .btn-custom {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Navegación -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Generar PDF</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="{{ url_for('listar_recibos') }}">Recibos</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Iniciar Sesión</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('register') }}">Registrar</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="text-center">Lista de Recibos</h2>
+        <p class="text-end">Bienvenido, {{ current_user.username }}!</p>
+        
+        <!-- Botón para Exportar a Excel -->
+        <div class="d-flex justify-content-end mb-3">
+            <a href="{{ url_for('exportar_excel') }}" class="btn btn-success">Exportar a Excel</a>
+        </div>
+        
+        <!-- Tabla de Recibos -->
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Fecha</th>
+                        <th>Contribuyente</th>
+                        <th>Calle</th>
+                        <th>Colonia</th>
+                        <th>Municipio</th>
+                        <th>Dependencia</th>
+                        <th>Observaciones</th>
+                        <th>Elaborado Por</th>
+                        <th>Orden de Pago</th>
+                        <th>Total Global</th>
+                        <th>Total en Letras</th>
+                        <th>Centavos</th>
+                        <th>Fecha de Creación</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for recibo in recibos.items %}
+                    <tr>
+                        <td>{{ recibo.id }}</td>
+                        <td>{{ recibo.fecha.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ recibo.contribuyente }}</td>
+                        <td>{{ recibo.calle }}</td>
+                        <td>{{ recibo.colonia }}</td>
+                        <td>{{ recibo.municipio }}</td>
+                        <td>{{ recibo.dependencia }}</td>
+                        <td>{{ recibo.observaciones }}</td>
+                        <td>{{ recibo.elaborado_por }}</td>
+                        <td>{{ recibo.orden_pago }}</td>
+                        <td>${{ '%.2f'|format(recibo.total_global) }}</td>
+                        <td>{{ recibo.total_en_letras }}</td>
+                        <td>{{ recibo.centavos }}</td>
+                        <td>{{ recibo.fecha_creacion.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            <a href="{{ url_for('descargar_pdf', recibo_id=recibo.id) }}" class="btn btn-primary btn-sm">Descargar PDF</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Paginación -->
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {% if recibos.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('listar_recibos', page=recibos.prev_num) }}" aria-label="Anterior">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                </li>
+                {% endif %}
+                
+                {% for page_num in recibos.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        {% if page_num == recibos.page %}
+                            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('listar_recibos', page=page_num) }}">{{ page_num }}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if recibos.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('listar_recibos', page=recibos.next_num) }}" aria-label="Siguiente">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        
+        <!-- Botón para Volver al Inicio -->
+        <div class="d-flex justify-content-end mt-3">
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Volver al Inicio</a>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

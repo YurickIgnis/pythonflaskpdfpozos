@@ -1,6 +1,13 @@
-Flask
+Flask==2.3.2
+Flask-Login
 docxtpl
 pdfkit
 num2words
 docx2pdf
 pytz
+python-docx
+PyPDF2
+Flask-SQLAlchemy
+psycopg2-binary
+pandas
+openpyxl
